@@ -46,6 +46,7 @@ var LastMSG = [];
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let session
+var GlobalToken = "";
 
 function createWindow () {
   if (!mainWindow) {
@@ -59,21 +60,34 @@ function createWindow () {
     })
   }
   mainWindow.setTitle('ReplyBOT Instagram Manager(IG:DM Base)')
+  
+  if(GlobalToken === ""){
+	let view = '../browser/login.html'
 
-  instagram.checkAuth(session).then((result) => {
-    let view = result.isLoggedIn ? '../browser/index.html' : '../browser/login.html'
-    session = result.session || session
-
-    mainWindow.loadURL(url.format({
-      pathname: path.join(__dirname, view),
-      protocol: 'file:',
-      slashes: true
-    }))
-  })
-
+	mainWindow.loadURL(url.format({
+	  pathname: path.join(__dirname, view),
+	  protocol: 'file:',
+	  slashes: true
+	}))
+  }else{
+	  CheckAuth();
+  }
   mainWindow.on('closed', () => mainWindow = null)
   mainWindow.setMenu(null);
   //mainWindow.openDevTools();
+}
+function CheckAuth(){
+	
+  instagram.checkAuth(session).then((result) => {
+	let view = result.isLoggedIn ? '../browser/index.html' : '../browser/login.html'
+	session = result.session || session
+
+	mainWindow.loadURL(url.format({
+	  pathname: path.join(__dirname, view),
+	  protocol: 'file:',
+	  slashes: true
+	}))
+  })
 }
 
 function createCheckpointWindow() {
@@ -330,14 +344,16 @@ electron.ipcMain.on('login', (evt, data) => {
   GetLoginInfo();
 })
 
-SetLoginToken("b405dcd9f42af8b7a819963f39d62ca366da0edb65a7776a62a241009b6727c6a4ab2160400dcd425790ae1417c871a8");
+//SetLoginToken("b405dcd9f42af8b7a819963f39d62ca366da0edb65a7776a62a241009b6727c6a4ab2160400dcd425790ae1417c871a8");
 function SetLoginToken(token){
 	APIURL = APIDEF+"token="+token;
+	GlobalToken = token;
 }
 function GetLoginInfo(){
+	//createWindow();
 	const data = {
 	}
-	//console.log("Fetch url : "+APIURL+"&service=GetLoginInfo");
+	console.log("Fetch url : "+APIURL+"&service=GetLoginInfo");
 	fetch(APIURL+"&service=GetLoginInfo",
 		{
 			method: 'POST',
@@ -363,6 +379,7 @@ function GetLoginInfo(){
 }*/
 function BilgileriGetir(txt){
 	if(txt.success){
+		CheckAuth();
 		console.log(txt.data);
 		ProceedLogin(txt.data);
 	}else{
