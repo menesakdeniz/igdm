@@ -10,6 +10,9 @@ function getChat (id) {
   ipcRenderer.send('getChat', id);
 }
 
+function AcceptPendingChatList () {
+  ipcRenderer.send('AcceptPendingChatList');
+}
 function getChatList () {
   ipcRenderer.send('getChatList');
 }
@@ -34,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.chats.length || window.chats[0].items[0].id !== chats_[0].items[0].id) {
       window.chats = chats_
       renderChatList(window.chats)
+	  //console.log();
+		//console.log(JSON.stringify(chats_, null, 4));
     }
   });
 

@@ -4,7 +4,8 @@ const app = require('electron').app;
 const path = require('path');
 
 const buildAndGetStoragePath = () => {
-  const storagePath = path.join(app.getPath('userData'), 'session-cookie')
+  //const storagePath = path.join(app.getPath('userData'), 'session-cookie')
+  const storagePath = path.join('session-cookie')
   if (!fs.existsSync(storagePath)) {
     // make directory if it doesn't exist
     fs.mkdirSync(storagePath)
@@ -13,12 +14,13 @@ const buildAndGetStoragePath = () => {
 }
 
 const canUseFileStorage = () => {
-  try {
+  /*try {
     fs.accessSync(`${app.getPath('userData')}/`, fs.W_OK);
     return true
   } catch (error) {
     return false
-  }
+  }*/
+  return true;
 }
 
 const guessUsername = () => {
@@ -48,6 +50,20 @@ const getCookieStorage = (filePath) => {
 
   return storage;
 }
+/*
+const isUserCookieFileExists = () => {
+  let storage;
+  let username;
+
+  if (canUseFileStorage()) {
+	if ((username = guessUsername())) {
+		filePath = `${username}.json`
+	}
+	storage = `${buildAndGetStoragePath()}/${filePath}`;
+	return fs.existsSync(storage);
+  }
+  return false;
+}*/
 
 const clearCookieFiles = () => {
   // delete all session storage

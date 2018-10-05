@@ -1,12 +1,30 @@
 const electron = require('electron');
 const app = electron.app;
+app.commandLine.appendSwitch('enable-transparent-visuals');
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendArgument('enable-transparent-visuals');
+app.commandLine.appendArgument('disable-gpu');
+app.commandLine.appendArgument("disable-renderer-backgrounding");
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('enable-transparent-visuals');
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendArgument('enable-transparent-visuals');
+app.commandLine.appendArgument('disable-gpu');
+app.commandLine.appendArgument("disable-renderer-backgrounding");
+const fetch = require('electron-fetch');
+
+
+
 const Menu = electron.Menu;
 const menuTemplate = require('./menutemplate');
 const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const url = require('url');
 const instagram = require('./instagram');
-const autoUpdater = require('./autoupdater');
+
+//const autoUpdater = require('./autoupdater');
 
 // fixes electron's timeout inconsistency
 // not doing this on windows because the fix doesn't work for windows.
@@ -14,8 +32,15 @@ if (process.platform != 'win32') {
   require('./timeout-shim').fix();
 }
 
+
+var APIDEF = "https://new.replybot.online/api/api.php?";
+var APIURL = APIDEF+"token=";
+
+
 const RATE_LIMIT_DELAY = 60000;
 let pollingInterval = 10000;
+
+var LastMSG = [];
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -29,10 +54,11 @@ function createWindow () {
       height: 800,
       icon: `${__dirname}/../browser/img/icon.png`,
       minWidth: 500,
-      minHeight: 400
+      minHeight: 400,
+		frame: false
     })
   }
-  mainWindow.setTitle('IG:dm - Instagram Desktop Messenger')
+  mainWindow.setTitle('ReplyBOT Instagram Manager(IG:DM Base)')
 
   instagram.checkAuth(session).then((result) => {
     let view = result.isLoggedIn ? '../browser/index.html' : '../browser/login.html'
@@ -46,35 +72,185 @@ function createWindow () {
   })
 
   mainWindow.on('closed', () => mainWindow = null)
+  mainWindow.setMenu(null);
+  //mainWindow.openDevTools();
 }
 
 function createCheckpointWindow() {
   const checkpointWindow = new BrowserWindow({
     width: 300,
-    height: 300,
+    height: 398,
     resizable: false,
     icon: `${__dirname}/../browser/img/icon.png`,
+	frame: false,
+	alwaysOnTop:true,
   })
-  checkpointWindow.setTitle('IG:dm - Instagram verification code')
+  checkpointWindow.setTitle('ReplyBOT Instagram Manager(IG:DM Base) - Onaylama kodu')
   checkpointWindow.loadURL(url.format({
     pathname: path.join(__dirname, '../browser/checkpoint.html'),
     protocol: 'file:',
     slashes: true
   }))
+  checkpointWindow.setMenu(null);
+ // checkpointWindow.openDevTools();
   return checkpointWindow
 }
-
+var FirstTime = true;
+var LastChats = [];
+var OkunmamisChatler = [];
 function getChatList () {
+  console.log("getChatList");
   if (!session) {
     return
   }
+  instagram.AcceptPendingChatList(session);
   instagram.getChatList(session).then((chats) => {
-    mainWindow.webContents.send('chatList', chats)
-
-    setTimeout(getChatList, pollingInterval);
+	//chat_.items[0]._params.text
+	//console.log(chats);
+	//console.log("chats._params.lastActivityAt : "+chats[0]+"\n----------------------------\n");
+	//chats.forEach((chatx) => console.log(chatx._params.lastActivityAt+"\n----------------------------\n"));
+	
+	chats.forEach(function(chat_) {
+		if(chat_._params.itemsSeenAt[chat_._params.viewerId]){
+			LastMSG[chat_.id] = chat_._params.itemsSeenAt[chat_._params.viewerId].timestamp;
+			//LastChats[chat_.id] = chat_;
+		}else
+			LastMSG[chat_.id] = -1;
+	});
+	
+	 //console.log(LastMSG);
+    mainWindow.webContents.send('chatList', chats);
+	
+	AutomateChats(chats);
+	
+    //setTimeout(getChatList, pollingInterval);
   }).catch(() => setTimeout(getChatList, RATE_LIMIT_DELAY))
 }
+function AutomateChats(chats){
+	console.log("AutomateChats");
+	/*if(FirstTime){
+		chats.forEach(function(chat_) {
+			LastChats[chat_.id] = chat_;
+		});
+	}*/
+	//console.log(chats);
+	chats.forEach(function(chat_) {
+		var isNew;
+		var FirstMSG = false;
+		//if(chat_._params.title.equal("akdenizrifki")){
+			//continue;
+		//}
+		//console.log(LastChats[chat_.id]);
+		/*console.log(LastMSG[chat_.id]);
+		if (chat_.id in LastChats){
+			console.log("if("+chat_._params.title+")");
+			//console.log("if("+chat_.id+")");
+			isNew = (LastChats && LastChats[chat_.id] &&
+				LastChats[chat_.id].items[0].id !== chat_.items[0].id
+			);
+		}else{
+			//console.log("else("+chat_.id+")("+LastMSG[chat_.id]+")");
+			isNew = true;
+			
+			if (!(chat_.id in LastMSG)){
+				console.log("first msg2("+chat_._params.title+")");
+				FirstMSG = true;
+			}else{
+				if(LastMSG[chat_.id] <= 100000){
+					console.log("first msg("+chat_._params.title+")");
+					FirstMSG = true;
+				}else{
+					console.log("first run("+chat_._params.title+")");
+					//console.log("first run");
+				}
+			}
+		}*/
+		if(LastMSG[chat_.id] >= 0){
+			// Daha önce konuşulmuş
+			//console.log("Daha once konusulmus("+chat_._params.title+")("+LastMSG[chat_.id]+")");
+			
+			isNew = (LastChats && LastChats[chat_.id] &&
+				LastChats[chat_.id].items[0].id !== chat_.items[0].id
+			);
+			FirstMSG = false;
+			
+		}else{
+			// Daha Önce konuşulmamış
+			//console.log("Daha once konusulmamis("+chat_._params.title+")");
+			isNew = true;
+			FirstMSG = true;
+		}
+		
+		
+		
+		if (isNew){
+			//OkunmamisChatler[chat_.id] = chat_;
+			//console.log("Yeni Mesaj");
+			GetNewMSGAndAnswer(chat_,FirstMSG);
+		}
+	});
+	//console.log(OkunmamisChatler);
+	/*chats.forEach(function(chat_) {
+		ifchatsHash[chat_.id].items[0].id !== chat_.items[0].id
+		//console.log(chat_);
+		//console.log(chat_._params);
+		//console.log("chat_._params.hasNewer : "+chat_._params.hasNewer);
+		if(chat_._params.hasNewer){
+			console.log("Yeni mesaj var("+chat_. id+")");
+		}
+	});*/
+	chats.forEach(function(chat_) {
+		LastChats[chat_.id] = chat_;
+	});
+	
+	
+	setTimeout(function(){ getChatList() }, 5000);
+}
 
+function GetNewMSGAndAnswer(chat_,first){
+	//console.log("GetNewMSGAndAnswer");
+	chat_.items.forEach(function(message){
+		if(message._params.created > LastMSG[chat_.id]){
+			var NewMSG = message._params.text;
+			const data = {
+				message : NewMSG
+			}
+			
+			
+			//console.log("message._params.text : "+message._params.text);
+			/*
+			token yok session geri yüklendiği için, session a tokeni de kayıt et
+			
+			*/
+			//console.log("Fetch url : "+APIURL+"&service=GetAnswer&first="+(first ? "1" : "0"));
+			fetch(APIURL+"&service=GetAnswer&id="+chat_.id+"&first="+(first ? "1" : "0"),
+				{
+					method: 'POST',
+					headers: {
+						'Accept': 'application/json',
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+			  })
+			.then(res => res.json())
+			.then(json => SendAnswer(chat_.id,json));
+			LastMSG[chat_.id] = message._params.created;
+			//console.log("Yeni mesaj : "+message._params.text);
+		}
+	});
+}
+function SendAnswer(chatid,json){
+	if(json.success){
+		if(json.data.length > 1){
+			instagram.sendMessage(session, json.data, chatid)
+		}else{
+			//console.log("json.data : "+json.data);
+			//console.log("Length : "+json.data.length);
+		}
+	}else{
+		console.log("API failed");
+	}
+}
 let timeoutObj;
 let messagesThread;
 function getChat (evt, id) {
@@ -117,7 +293,7 @@ app.on('ready', () => {
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu); 
   }
-  autoUpdater.init();
+//  autoUpdater.init();
 })
 
 app.on('window-all-closed', () => {
@@ -143,9 +319,58 @@ app.on('browser-window-focus', () => {
 })
 
 electron.ipcMain.on('login', (evt, data) => {
-  if(data.username === "" || data.password === "") {
+	//console.log("login accur");
+  /*if(data.username === "" || data.password === "") {
     return mainWindow.webContents.send('loginError', "Please enter all required fields");
+  }*/
+  if(data.token === "") {
+    return mainWindow.webContents.send('loginError', "Lütfen tokeni giriniz.");
   }
+  SetLoginToken(data.token);
+  GetLoginInfo();
+})
+
+SetLoginToken("b405dcd9f42af8b7a819963f39d62ca366da0edb65a7776a62a241009b6727c6a4ab2160400dcd425790ae1417c871a8");
+function SetLoginToken(token){
+	APIURL = APIDEF+"token="+token;
+}
+function GetLoginInfo(){
+	const data = {
+	}
+	//console.log("Fetch url : "+APIURL+"&service=GetLoginInfo");
+	fetch(APIURL+"&service=GetLoginInfo",
+		{
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+	  })
+	.then(res => res.json())
+	.then(json => BilgileriGetir(json));
+}
+/*function ApiResponse(txt){
+	CloseLoader();
+	if(txt.success){
+		
+	}else{
+		//console.log("Failed");
+		if(txt.error != "No method allowed before sign in")
+			alert(txt.error,"Hata");
+		return false;
+	}
+}*/
+function BilgileriGetir(txt){
+	if(txt.success){
+		console.log(txt.data);
+		ProceedLogin(txt.data);
+	}else{
+		return mainWindow.webContents.send('loginError', "Hatalı token girdiniz!");
+	}
+}
+
+function ProceedLogin(data){
   const login = (keepLastSession) => {
     instagram.login(data.username, data.password, keepLastSession).then((session_) => {
       session = session_
@@ -166,13 +391,13 @@ electron.ipcMain.on('login', (evt, data) => {
     if (error.message) {
       message = error.message;
     } else if (error.hasOwnProperty('json') && !!error.json.two_factor_required) {
-      message = 'You have two factor authentication enabled. Two factor authentication is not yet supported.';
+      message = 'Lütfen two-factor ü kapatınız';
     }
     return message
   }
 
   login()
-})
+}
 
 electron.ipcMain.on('logout', () => {
   instagram.logout()
@@ -191,13 +416,13 @@ electron.ipcMain.on('getChatList', getChatList)
 electron.ipcMain.on('getChat', getChat)
 
 electron.ipcMain.on('getOlderMessages', (_, id) => {
+	//console.log("getOlderMessages");
   instagram.getOlderMessages(session, messagesThread, id)
     .then((data) => {
       messagesThread = data.thread
       mainWindow.webContents.send('olderMessages', data.messages)
     })
 })
-
 electron.ipcMain.on('message', (_, data) => {
   if (data.isNewChat) {
     instagram.sendNewChatMessage(session, data.message, data.users).then((chat) => getChat(null, chat[0].id))

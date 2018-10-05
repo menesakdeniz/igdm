@@ -1,4 +1,4 @@
-
+/*
 const {BrowserWindow} = require('electron');
 const url = require('url');
 const path = require('path');
@@ -36,3 +36,4 @@ exports.init = () => {
   autoUpdater.on('update-downloaded', (ev, info) => autoUpdater.quitAndInstall());
   autoUpdater.checkForUpdates();
 }
+*/

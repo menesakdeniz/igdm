@@ -19,13 +19,16 @@ exports.checkAuth = function (session) {
 }
 
 exports.login = function (username, password, keepLastSession) {
-  if (!keepLastSession) {
+ /*if (!keepLastSession) {
     utils.clearCookieFiles();
-  }
+  }*/
   return new Promise((resolve, reject) => {
-    const device = utils.getDevice(username);
-    const storage = utils.getCookieStorage(`${username}.json`);
-    Client.Session.create(device, storage, username, password).then(resolve).catch(reject)
+	const device = utils.getDevice(username);
+	const storage = utils.getCookieStorage(`${username}.json`);
+	/*if(isUserCookieFileExists){
+		
+	}*/
+	Client.Session.create(device, storage, username, password).then(resolve).catch(reject)
   })
 }
 
@@ -43,10 +46,30 @@ exports.startCheckpoint = (error) => {
 
 exports.getChatList = function (session) {
   return new Promise((resolve, reject) => {
-    var feed = new Client.Feed.Inbox(session, 10);
+    var feed = new Client.Feed.Inbox(session, 20);
     feed.all().then(resolve).catch(reject)
   })
 }
+
+exports.AcceptPendingChatList = function (session) {
+	/*return new Promise((resolve, reject) => {
+		var feed = new Client.Feed.InboxPending(session, 10);
+		feed.all().then(resolve).catch(reject)
+	}).then((chats) => {
+		chats.forEach((chat) => Client.Relationship.approvePending(session, chat.id));
+		chats.forEach((chat) => console.log(chat.id));
+	});*/
+	return new Promise((resolve, reject) => {
+		Client.Thread.approveAll(session).then(resolve).catch(reject)
+	})
+}
+/*
+exports.getShuffledChatList = function (session) {
+	return new Promise((resolve, reject) => {
+		var feed = new Client.Feed.InboxPending(session, 10);
+		feed.all().then(resolve).catch(reject)
+	})
+}*/
 
 exports.getChat = function (session, chatId) {
   return new Promise((resolve, reject) => {

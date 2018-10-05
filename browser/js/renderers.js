@@ -19,12 +19,11 @@ function renderMessage (message, direction, time, type) {
   }
 
   if (!type && typeof message === 'string') type = 'text';
-
   if (renderers[type]) renderers[type](divContent, message);
   else renderMessageAsText(divContent, '<unsupported message format>', true);
 
   divContent.appendChild(dom(
-    `<p class="message-time">${time ? formatTime(time) : 'Sending...'}</p>`)
+    `<p class="message-time">${time ? formatTime(time) : 'Gönderiliyor...'}</p>`)
   );
   div.appendChild(divContent);
   
