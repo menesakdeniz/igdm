@@ -223,7 +223,7 @@ function GetNewMSGAndAnswer(chat_,first){
 			
 			*/
 			//console.log("Fetch url : "+APIURL+"&service=GetAnswer&first="+(first ? "1" : "0"));
-			fetch(APIURL+"&service=GetAnswer&id="+chat_.id+"&first="+(first ? "1" : "0"),
+			fetch(APIURL+"&service=GetAnswer&chatid="+chat_.id+"&first="+(first ? "1" : "0"),
 				{
 					method: 'POST',
 					headers: {
