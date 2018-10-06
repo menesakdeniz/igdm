@@ -225,31 +225,33 @@ function GetNewMSGAndAnswer(chat_,first){
 	//console.log("GetNewMSGAndAnswer");
 	chat_.items.forEach(function(message){
 		if(message._params.created > LastMSG[chat_.id]){
-			var NewMSG = message._params.text;
-			if(NewMSG.length > 1){
-				const data = {
-					message : NewMSG
+			if(message._params.text){
+				var NewMSG = message._params.text;
+				if(NewMSG && NewMSG.length > 1){
+					const data = {
+						message : NewMSG
+					}
+					
+					
+					//console.log("message._params.text : "+message._params.text);
+					/*
+					token yok session geri yüklendiği için, session a tokeni de kayıt et
+					
+					*/
+					//console.log("Fetch url : "+APIURL+"&service=GetAnswer&first="+(first ? "1" : "0"));
+					fetch(APIURL+"&service=GetAnswer&chatid="+chat_.id+"&first="+(first ? "1" : "0"),
+						{
+							method: 'POST',
+							headers: {
+								'Accept': 'application/json',
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify(data)
+					  })
+					.then(res => res.json())
+					.then(json => SendAnswer(chat_.id,json));
+					//console.log("Yeni mesaj : "+message._params.text);
 				}
-				
-				
-				//console.log("message._params.text : "+message._params.text);
-				/*
-				token yok session geri yüklendiği için, session a tokeni de kayıt et
-				
-				*/
-				//console.log("Fetch url : "+APIURL+"&service=GetAnswer&first="+(first ? "1" : "0"));
-				fetch(APIURL+"&service=GetAnswer&chatid="+chat_.id+"&first="+(first ? "1" : "0"),
-					{
-						method: 'POST',
-						headers: {
-							'Accept': 'application/json',
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify(data)
-				  })
-				.then(res => res.json())
-				.then(json => SendAnswer(chat_.id,json));
-				//console.log("Yeni mesaj : "+message._params.text);
 			}
 			LastMSG[chat_.id] = message._params.created;
 		}
