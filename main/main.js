@@ -76,7 +76,7 @@ function createWindow () {
   mainWindow.setMenu(null);
   //mainWindow.openDevTools();
 }
-function CheckAuth(){
+function CheckAuth(login=false){
 	
   instagram.checkAuth(session).then((result) => {
 	let view = result.isLoggedIn ? '../browser/index.html' : '../browser/login.html'
@@ -87,6 +87,10 @@ function CheckAuth(){
 	  protocol: 'file:',
 	  slashes: true
 	}))
+	
+	if(login){
+		GetLoginInfo();
+	}
   })
 }
 
@@ -344,14 +348,34 @@ electron.ipcMain.on('login', (evt, data) => {
   if(data.token === "") {
     return mainWindow.webContents.send('loginError', "Lütfen tokeni giriniz.");
   }
-  SetLoginToken(data.token);
-  GetLoginInfo();
+  
+	var token = data.token;
+	APIURL = APIDEF+"token="+token;
+	GlobalToken = token;
+	fetch(APIURL+"&service=CheckToken",
+		{
+			method: 'POST',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+	  })
+	.then(res => res.json())
+	.then(json => {
+		if(json.success){
+			console.log("checktoken success "+json.data);
+			CheckAuth(true);
+		}else{
+			console.log("Token error : "+json.error);
+			return mainWindow.webContents.send('loginError', json.error);
+		}
+	});
+  
 })
 
 //SetLoginToken("b405dcd9f42af8b7a819963f39d62ca366da0edb65a7776a62a241009b6727c6a4ab2160400dcd425790ae1417c871a8");
 function SetLoginToken(token){
-	APIURL = APIDEF+"token="+token;
-	GlobalToken = token;
 }
 function GetLoginInfo(){
 	//createWindow();
@@ -383,7 +407,6 @@ function GetLoginInfo(){
 }*/
 function BilgileriGetir(txt){
 	if(txt.success){
-		CheckAuth();
 		console.log(txt.data);
 		ProceedLogin(txt.data);
 	}else{
