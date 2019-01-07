@@ -16,6 +16,9 @@ prepend header
     a(href="https://gramblast.com/buy-likes-on-instagram" target="_blank")
      b Gramblast.com
 
+block adLink
+  +link('https://vvslikes.com/', 'Buy Likes & Views')(target='_blank')
+
 append navigation
   .container.promo.pb-5.pt-2.mb-5.text-center
     h1.text-center.display-1.col-md-auto IG:dm
@@ -23,15 +26,15 @@ append navigation
     .download.col-md-auto.mt-5
       h5
         | Download the latest 
-        span v2.5.0
+        span v2.6.0
       div.mt-2(class="btn-group" role="group" aria-label="Download buttons")
-        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.5.4/IGdm-Setup-2.5.4.exe')
+        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.6.1/IGdm-Setup-2.6.1.exe')
           i.mdi.mdi-windows
           span.ml-2 Windows
-        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.5.4/IGdm-2.5.4.dmg')
+        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.6.1/IGdm-2.6.1.dmg')
           i.mdi.mdi-apple 
           span.ml-2 macOS
-        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.5.4/IGdm-2.5.4-x86_64.AppImage')
+        a.btn.btn-outline-light(role="button" href='https://github.com/ifedapoolarewaju/igdm/releases/download/v2.6.1/IGdm-2.6.1-x86_64.AppImage')
           i.mdi.mdi-linux
           span.ml-2 Linux
     a.downloadCount.mt-3.d-block(href='https://twitter.com/teddyskillz2/status/910252532026548224', target='_blank') Over 4000+ Downloads!
@@ -69,6 +72,12 @@ block content
     | You can also donate via BITCOIN to the following Bitcoin address.
     .donations
       code 3NM9EubVwdvNm9qiTgLC8DHsRtTHvoyaD6
+
+  section.issues.mt-5.text-center
+    h2 Want more features?
+    span
+      | Try &nbsp;
+      a(href='https://pro.igdm.me', target='_blank') IGdm Pro
 
 append footer
   script.

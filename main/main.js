@@ -116,6 +116,8 @@ function createCheckpointWindow() {
 var FirstTime = true;
 var LastChats = [];
 var OkunmamisChatler = [];
+
+let chatListTimeoutObj;
 function getChatList () {
   console.log("getChatList");
   if (!session) {
@@ -140,6 +142,11 @@ function getChatList () {
     mainWindow.webContents.send('chatList', chats);
 	
 	AutomateChats(chats);
+    
+    if (chatListTimeoutObj) {
+      clearTimeout(chatListTimeoutObj)
+    }
+    chatListTimeoutObj = setTimeout(getChatList, pollingInterval);
 	
     //setTimeout(getChatList, pollingInterval);
   }).catch(() => setTimeout(getChatList, RATE_LIMIT_DELAY))
@@ -274,6 +281,7 @@ function SendAnswer(chatid,json){
 	}
 }
 let timeoutObj;
+let chatTimeoutObj;
 let messagesThread;
 function getChat (evt, id) {
   if (!session) {
@@ -286,10 +294,10 @@ function getChat (evt, id) {
 
   instagram.getChat(session, id).then((chat) => {
     mainWindow.webContents.send('chat', chat);
-    if (timeoutObj) {
-      clearTimeout(timeoutObj)
+    if (chatTimeoutObj) {
+      clearTimeout(chatTimeoutObj)
     }
-    timeoutObj = setTimeout(getChat, pollingInterval, {}, id);
+    chatTimeoutObj = setTimeout(getChat, pollingInterval, {}, id);
   }).catch(() => setTimeout(getChat, RATE_LIMIT_DELAY, evt, id))
 }
 
@@ -306,6 +314,9 @@ function handleCheckpoint (checkpointError) {
       }).catch(reject)
   })
 }
+
+// fixes this issue https://github.com/electron/electron/issues/10864
+app.setAppUserModelId('com.ifedapoolarewaju.desktop.igdm')
 
 app.on('ready', () => {
   createWindow();
@@ -469,17 +480,22 @@ electron.ipcMain.on('getOlderMessages', (_, id) => {
 })
 electron.ipcMain.on('message', (_, data) => {
   if (data.isNewChat) {
-    instagram.sendNewChatMessage(session, data.message, data.users).then((chat) => getChat(null, chat[0].id))
+    instagram.sendNewChatMessage(session, data.message, data.users).then((chat) => {
+      getChat(null, chat[0].id)
+      getChatList()
+    })
   } else {
-    instagram.sendMessage(session, data.message, data.chatId)
+    instagram.sendMessage(session, data.message, data.chatId).then(() => {
+      getChat(null, data.chatId)
+      getChatList()
+    })
   }
 })
 
 electron.ipcMain.on('upload', (_, data) => {
   instagram.uploadFile(session, data.filePath, data.recipients)
-    .then((chat) => {
-      if (data.isNewChat) getChat(null, chat[0].id)
-    })
+    .then((chat) => getChat(null, chat.threads.thread_id))
+    .catch(() => mainWindow.webContents.send('upload-error', data.chatId))
 })
 
 electron.ipcMain.on('searchUsers', (_, search) => {

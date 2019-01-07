@@ -4,6 +4,7 @@ function renderMessage (message, direction, time, type) {
     text: renderMessageAsText,
     like: renderMessageAsLike,
     media: renderMessageAsImage,
+    raven_media: renderMessageAsRavenImage,
     reel_share: renderMessageAsUserStory, // replying to a user's story
     link: renderMessageAsLink
   }
@@ -102,6 +103,22 @@ function renderMessageAsImage (container, message) {
   })
 }
 
+function renderMessageAsRavenImage (container, message) {
+  container.classList.add('ig-media');
+
+  if (message._params.ravenMedia.image_versions2) {
+    var url = message._params.ravenMedia.image_versions2.candidates[0].url
+    var img = dom(`<img src="${url}">`);
+    img.onload = conditionedScrollToBottom();
+    container.appendChild(img);
+
+    container.addEventListener('click', () => {
+      showInViewer(dom(`<img src="${url}">`));
+    })
+  }
+
+}
+
 function renderMessageAsLike (container) {
   renderMessageAsImage(container, 'img/love.png');
 }
@@ -186,11 +203,16 @@ function renderChatList (chatList) {
     if (isActive(chat_)) setActive(li);
     // don't move this down!
     addNotification(li, chat_);
-    chatsHash[chat_.id] = chat_;
+    window.chatListHash[chat_.id] = chat_;
 
     li.onclick = () => {
       markAsRead(chat_.id, li);
       setActive(li);
+      // render the cached chat before fetching latest
+      // to avoid visible latency
+      if (window.chatCache[chat_.id]) {
+        renderChat(window.chatCache[chat_.id]);
+      }
       getChat(chat_.id);
     }
     ul.appendChild(li);
@@ -212,6 +234,7 @@ function renderChatHeader (chat_) {
 
 function renderChat (chat_) {
   window.chat = chat_;
+  window.chatCache[chat_.id] = chat_;
 
   var msgContainer = document.querySelector(CHAT_WINDOW_SELECTOR);
   msgContainer.innerHTML = '';
